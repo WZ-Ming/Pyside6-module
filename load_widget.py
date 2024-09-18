@@ -7,7 +7,7 @@ from PySide6.QtCore import QEvent, QObject, Qt, QRect, QPoint, QSize, QTimer, QT
 class LoadWidget(QWidget):
     close_thread_sig = Signal()
 
-    def __init__(self, parent=None, info="加载中"):
+    def __init__(self, parent, info="加载中"):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
