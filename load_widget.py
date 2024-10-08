@@ -5,12 +5,12 @@ from PySide6.QtCore import QEvent, QObject, Qt, QRect, QPoint, QSize, QTimer, QT
 
 
 class LoadWidget(QWidget):
-    close_thread_sig = Signal()
 
-    def __init__(self, parent, info="加载中"):
+    def __init__(self, parent=None, info="加载中"):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setStyleSheet("background-color: rgba(0, 0, 0, 50);")
         self.m_showText = info
         self.m_count = 0
@@ -19,16 +19,25 @@ class LoadWidget(QWidget):
         self.m_thread = QThread()
         self.m_thread.started.connect(self.m_timer.start)
         self.m_thread.finished.connect(self.m_timer.stop)
+        self.m_timer.timeout.connect(self.on_update_widget)
         self.m_timer.moveToThread(self.m_thread)
-        self.m_timer.timeout.connect(self.on_timer_timeout)
-
         if parent:
             parent.installEventFilter(self)
             self.on_parent_resize()
+        else:
+            self.hide()
+
+    def refresh_show(self, parent=None):
+        if parent is not None:
+            self.setParent(parent)
+            self.on_parent_resize()
+        self.show()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if watched == self.parent() and event.type() == QEvent.Resize:
             self.on_parent_resize(event)
+        if watched == self.parent() and event.type() == QEvent.Close:
+            self.close()
         return super().eventFilter(watched, event)
 
     def paintEvent(self, event):
@@ -70,27 +79,25 @@ class LoadWidget(QWidget):
         # 当父级窗口大小变化时调用此方法
         self.resize(self.parent().geometry().width(), self.parent().geometry().height())
 
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.update()
-        return super().resizeEvent(event)
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self._closeUpdateWidget()
-        return super().closeEvent(event)
-
     def showEvent(self, event: QShowEvent) -> None:
         self.m_thread.start()
         return super().showEvent(event)
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self._closeUpdateWidget()
-        return super().hideEvent(event)
-
-    def _closeUpdateWidget(self):
         self.m_thread.quit()
         self.m_thread.wait()
+        return super().hideEvent(event)
 
-    def on_timer_timeout(self):
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.update()
+        return super().resizeEvent(event)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.m_thread.quit()
+        self.m_thread.wait()
+        return super().closeEvent(event)
+
+    def on_update_widget(self):
         if self.m_count >= 3:
             self.m_count = 0
         else:
