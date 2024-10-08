@@ -24,13 +24,6 @@ class LoadWidget(QWidget):
         if parent:
             parent.installEventFilter(self)
             self.on_parent_resize()
-        else:
-            self.hide()
-
-    def refresh_show(self, parent=None):
-        if parent is not None:
-            self.setParent(parent)
-            self.on_parent_resize()
         self.show()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -109,7 +102,6 @@ class mainWindow(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self.load_widget = LoadWidget(self)
 
 
