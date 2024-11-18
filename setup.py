@@ -6,7 +6,8 @@ from builtins import dict
 import os
 import shutil
 import platform
-from distutils.core import setup
+# from distutils.core import setup
+from setuptools import setup
 from Cython.Build import cythonize
 import subprocess
 import glob
